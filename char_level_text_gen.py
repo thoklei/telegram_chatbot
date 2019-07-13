@@ -220,4 +220,4 @@ if __name__ == "__main__":
                     help="for how many epochs do you want to train the model?")
 
     args = parser.parse_args()
-    main(args.scratch, args.textfile, args.checkpoint)
+    main(args.scratch, args.textfile, args.checkpoint, args.epochs)
