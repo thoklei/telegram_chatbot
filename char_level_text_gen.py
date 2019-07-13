@@ -1,8 +1,4 @@
-"""
-This is basically my copy of Andrej Karpathy's character level LSTM from the Tensorflow Tutorials.
-I made some slight changes to suit my needs such as changing the serialization
-of the models and adding a custom callback to save exported versions of the models.
-"""
+
 from __future__ import absolute_import, division, print_function, unicode_literals
 import tensorflow as tf
 import numpy as np
@@ -61,16 +57,15 @@ class Config():
     ### hyperparameters ###
     BUFFER_SIZE = 10000
     BATCH_SIZE = 64
-    #EPOCHS = 30
+    EPOCHS = 30
 
     embedding_dim = 256
     rnn_units = 1024
 
     seq_length = 75
 
-    def __init__(self, vocab_size, epochs):
+    def __init__(self, vocab_size):
         self.vocab_size = vocab_size
-        self.EPOCHS = epochs
             
 
 def train_model(checkpoint_dir, text_as_int, model, config):
@@ -83,10 +78,7 @@ def train_model(checkpoint_dir, text_as_int, model, config):
     dataset = sequences.map(split_input_target)
     dataset = dataset.shuffle(config.BUFFER_SIZE).batch(config.BATCH_SIZE, drop_remainder=True)
 
-    def loss(labels, logits):
-        return tf.keras.losses.sparse_categorical_crossentropy(labels, logits, from_logits=True)
-
-    model.compile(optimizer='adam', loss=loss)
+    model.compile(optimizer='adam', loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True))
 
     ### setting callbacks ###
 
@@ -112,7 +104,7 @@ def train_model(checkpoint_dir, text_as_int, model, config):
         # Write TensorBoard logs to `./logs` directory
         tf.keras.callbacks.TensorBoard(log_dir=os.path.join(checkpoint_dir,"logs")),
         tf.keras.callbacks.ModelCheckpoint(filepath=os.path.join(checkpoint_dir,"checkpoint.h5"),
-                                            save_best_only=True,
+                                            #save_best_only=True,
                                             period=1),
         ReleaseCallback()
     ]
@@ -174,13 +166,13 @@ def generate_text(model, start_string, char2idx, idx2char):
     return (''.join(text_generated))
 
 
-def main(training_from_scratch, filename, checkpoint_dir, epochs):
+def main(training_from_scratch, filename, checkpoint_dir, checkpoint):
 
     ### opening the file ###
     text = open(filename, 'rb').read().decode(encoding='utf-8')
     vocab_size = len(set(text))
 
-    config = Config(vocab_size, epochs)
+    config = Config(vocab_size)
 
     ### looking at shit ###
     print('Length of text: {} characters'.format(len(text)))
@@ -198,7 +190,7 @@ def main(training_from_scratch, filename, checkpoint_dir, epochs):
                     batch_size    = config.BATCH_SIZE)
 
     else:
-        model = tf.keras.models.load_model(checkpoint_dir)
+        model = tf.keras.models.load_model(checkpoint)
 
     model = train_model(checkpoint_dir, text_as_int, model, config)
 
@@ -210,14 +202,18 @@ def main(training_from_scratch, filename, checkpoint_dir, epochs):
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description='Trains a character-level LSTM, either from scratch or existing checkpoint.')
-    parser.add_argument('-scratch', type=bool,
+    parser.add_argument('-scratch', type=int,
                     help='0 = starting from checkpoint, 1 = staring from scratch')
     parser.add_argument('-textfile', type=str,
                     help='Which file to use as training data')
-    parser.add_argument("-checkpoint", type=str,
+    parser.add_argument("-checkpointdir", type=str,
                     help="path to checkpoint directory from which to start")
-    parser.add_argument("-epochs", type=int,
-                    help="for how many epochs do you want to train the model?")
+    parser.add_argument("-checkpoint", type=str,
+                    help="path to checkpoint file from which to start")
 
     args = parser.parse_args()
-    main(args.scratch, args.textfile, args.checkpoint, args.epochs)
+    if args.scratch == 0:
+        scratch = False
+    else:
+        scratch = True
+    main(scratch, args.textfile, args.checkpointdir, args.checkpoint)
