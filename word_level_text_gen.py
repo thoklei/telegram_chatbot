@@ -50,29 +50,30 @@ def preprocessing(text, checkpoint_dir, minocc):
     return splitted, char2idx, idx2char
 
 
-def main(training_from_scratch, filename, checkpoint_dir, checkpoint, epochs, minocc):
+def main(training_from_scratch, args):
+    
 
     if( training_from_scratch ):
 
-        text = open(filename, 'rb').read().decode(encoding='utf-8')
-        text, char2idx, idx2char = preprocessing(text, checkpoint_dir, minocc) # note that we are replacing the text here
+        text = open(args.filename, 'rb').read().decode(encoding='utf-8')
+        text, char2idx, idx2char = preprocessing(text, args.checkpoint_dir, args.minocc) # note that we are replacing the text here
 
         vocab_size = len(idx2char)
-        config = Config(vocab_size, epochs)
+        config = Config(vocab_size, args.epochs)
 
         model = build_model(config)
     else:
 
-        model = tf.keras.models.load_model(checkpoint)
-        char2idx = unpickle(checkpoint_dir,'char2idx')
-        idx2char = unpickle(checkpoint_dir, 'idx2char')
-        text = unpickle(checkpoint_dir, 'dataset')
+        model = tf.keras.models.load_model(args.checkpoint)
+        char2idx = unpickle(args.checkpoint_dir,'char2idx')
+        idx2char = unpickle(args.checkpoint_dir, 'idx2char')
+        text = unpickle(args.checkpoint_dir, 'dataset')
 
         vocab_size = len(idx2char)
-        config = Config(vocab_size, epochs)
+        config = Config(vocab_size, args.epochs, args.initepochs)
 
     text_as_int = np.array([char2idx[c] for c in text]) # works because text is a list of words
-    train_model(checkpoint_dir, text_as_int, model, config)
+    train_model(args.checkpoint_dir, text_as_int, model, config)
     
 
 
@@ -89,6 +90,8 @@ if __name__ == "__main__":
                     help="path to checkpoint file from which to start")
     parser.add_argument("-epochs", type=int,
                     help="how many epochs do you want to run?")
+    parser.add_argument("-initepochs", type=int, default=0,
+                    help="The number of the first epoch while training")
     parser.add_argument("-minocc", type=int, default=1,
                     help="How often a word needs to appear before it shows up in the vocab")
 
@@ -97,4 +100,4 @@ if __name__ == "__main__":
         scratch = False
     else:
         scratch = True
-    main(scratch, args.textfile, args.checkpointdir, args.checkpoint, args.epochs, args.minocc)
+    main(scratch, args)

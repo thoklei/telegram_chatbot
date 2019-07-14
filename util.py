@@ -101,15 +101,15 @@ def train_model(checkpoint_dir, text_as_int, model, config):
     ]
 
     ### training - you gotta love keras ###
-    model.fit(dataset, epochs=config.epochs, callbacks=callbacks)
+    model.fit(dataset, epochs=config.epochs, initial_epoch=config.initial_epoch, callbacks=callbacks)
 
 
 class Config():
 
-    def __init__(self, vocab_size, epochs):
+    def __init__(self, vocab_size, epochs, initial_epoch):
         self.vocab_size = vocab_size
         self.epochs = epochs
-
+        self.initial_epoch = initial_epoch
         self.buffer_size = 10000
         self.batch_size = 64
         self.embedding_dim = 256

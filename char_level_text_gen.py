@@ -24,29 +24,29 @@ def create_vocab_from_file(text, checkpoint_dir):
     return char2idx, idx2char
 
 
-def main(training_from_scratch, filename, checkpoint_dir, checkpoint, epochs):
+def main(training_from_scratch, args):
 
     ### opening the file ###
-    text = open(filename, 'rb').read().decode(encoding='utf-8')
+    text = open(args.filename, 'rb').read().decode(encoding='utf-8')
     vocab_size = len(set(text))
 
-    config = Config(vocab_size, epochs)
+    config = Config(vocab_size, args.epochs, args.initepochs)
 
     ### looking at shit ###
     print('Length of text: {} characters'.format(len(text)))
     print(text[:250])
 
     ### creating vocab, converting text to long integer sequence ###
-    char2idx, idx2char = create_vocab_from_file(text, checkpoint_dir)
+    char2idx, idx2char = create_vocab_from_file(text, args.checkpoint_dir)
     text_as_int = np.array([char2idx[c] for c in text])
 
     if( training_from_scratch ):
         model = build_model(config)
 
     else:
-        model = tf.keras.models.load_model(checkpoint)
+        model = tf.keras.models.load_model(args.checkpoint)
 
-    train_model(checkpoint_dir, text_as_int, model, config)
+    train_model(args.checkpoint_dir, text_as_int, model, config)
 
 
 
@@ -63,10 +63,12 @@ if __name__ == "__main__":
                     help="path to checkpoint file from which to start")
     parser.add_argument("-epochs", type=int,
                     help="how many epochs do you want to run?")
+    parser.add_argument("-initepochs", type=int, default=0,
+                    help="The number of the first epoch while training")
 
     args = parser.parse_args()
     if args.scratch == 0:
         scratch = False
     else:
         scratch = True
-    main(scratch, args.textfile, args.checkpointdir, args.checkpoint, args.epochs)
+    main(scratch, args)
