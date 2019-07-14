@@ -57,15 +57,16 @@ class Config():
     ### hyperparameters ###
     BUFFER_SIZE = 10000
     BATCH_SIZE = 64
-    EPOCHS = 30
+    EPOCHS = 15
 
     embedding_dim = 256
     rnn_units = 1024
 
     seq_length = 75
 
-    def __init__(self, vocab_size):
+    def __init__(self, vocab_size, epochs):
         self.vocab_size = vocab_size
+        self.EPOCHS = epochs
             
 
 def train_model(checkpoint_dir, text_as_int, model, config):
@@ -77,6 +78,9 @@ def train_model(checkpoint_dir, text_as_int, model, config):
     sequences = char_dataset.batch(config.seq_length+1, drop_remainder=True)
     dataset = sequences.map(split_input_target)
     dataset = dataset.shuffle(config.BUFFER_SIZE).batch(config.BATCH_SIZE, drop_remainder=True)
+
+    def loss(labels, logits):
+        return tf.keras.losses.sparse_categorical_crossentropy(labels, logits, from_logits=True)
 
     model.compile(optimizer='adam', loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True))
 
@@ -123,7 +127,7 @@ def train_model(checkpoint_dir, text_as_int, model, config):
                     rnn_units     = config.rnn_units,
                     batch_size    = 1)
     new_model.set_weights(model.get_weights())
-    new_model.save(os.path.join(checkpoint_dir, "checkpoint.h5"))
+    #new_model.save(os.path.join(checkpoint_dir, "checkpoint_release.h5"))
 
     return new_model
 
@@ -166,13 +170,15 @@ def generate_text(model, start_string, char2idx, idx2char):
     return (''.join(text_generated))
 
 
-def main(training_from_scratch, filename, checkpoint_dir, checkpoint):
+def main(training_from_scratch, filename, checkpoint_dir, checkpoint, epochs):
+
+    print("from scratch: ",training_from_scratch)
 
     ### opening the file ###
     text = open(filename, 'rb').read().decode(encoding='utf-8')
     vocab_size = len(set(text))
 
-    config = Config(vocab_size)
+    config = Config(vocab_size, epochs)
 
     ### looking at shit ###
     print('Length of text: {} characters'.format(len(text)))
@@ -210,10 +216,12 @@ if __name__ == "__main__":
                     help="path to checkpoint directory from which to start")
     parser.add_argument("-checkpoint", type=str,
                     help="path to checkpoint file from which to start")
+    parser.add_argument("-epochs", type=int,
+                    help="how many epochs do you want to run?")
 
     args = parser.parse_args()
     if args.scratch == 0:
         scratch = False
     else:
         scratch = True
-    main(scratch, args.textfile, args.checkpointdir, args.checkpoint)
+    main(scratch, args.textfile, args.checkpointdir, args.checkpoint, args.epochs)
