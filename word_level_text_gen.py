@@ -1,7 +1,7 @@
 import tensorflow as tf
 import numpy as np
 import argparse
-from util import prepare_text, remove_unknowns, split_input_target, build_model, Config, train_model, pickle_rick
+from util import prepare_text, remove_unknowns, split_input_target, build_model, Config, train_model, pickle_rick, unpickle
 
 # in case you want to use the Shakespeare dataset to check if it works
 #path_to_file = tf.keras.utils.get_file('shakespeare.txt', 'https://storage.googleapis.com/download.tensorflow.org/data/shakespeare.txt')
@@ -43,29 +43,35 @@ def preprocessing(text, checkpoint_dir):
     char2idx = {u:i for i, u in enumerate(vocab)}
     idx2char = np.array(vocab)
 
-    pickle_rick(checkpoint_dir, char2idx, idx2char)
+    pickle_rick(checkpoint_dir, char2idx, 'char2idx')
+    pickle_rick(checkpoint_dir, idx2char, 'idx2char')
+    pickle_rick(checkpoint_dir, splitted, 'dataset')
 
-    return splitted, char2idx, idx2char, vocab
+    return splitted, char2idx, idx2char
 
 
 def main(training_from_scratch, filename, checkpoint_dir, checkpoint, epochs):
 
-    ### opening the file ###
-    text = open(filename, 'rb').read().decode(encoding='utf-8')
-
-    ### creating vocab, converting text to long integer sequence ###
-    text, char2idx, idx2char, vocab = preprocessing(text, checkpoint_dir) # note that we are replacing the text here
-    text_as_int = np.array([char2idx[c] for c in text]) # works because text is a list of words
-    vocab_size = len(vocab)
-
-    config = Config(vocab_size, epochs)
-
     if( training_from_scratch ):
+
+        text = open(filename, 'rb').read().decode(encoding='utf-8')
+        text, char2idx, idx2char = preprocessing(text, checkpoint_dir) # note that we are replacing the text here
+
+        vocab_size = len(idx2char)
+        config = Config(vocab_size, epochs)
+
         model = build_model(config)
-
     else:
-        model = tf.keras.models.load_model(checkpoint)
 
+        model = tf.keras.models.load_model(checkpoint)
+        char2idx = unpickle(checkpoint_dir,'char2idx')
+        idx2char = unpickle(checkpoint_dir, 'idx2char')
+        text = unpickle(checkpoint_dir, 'dataset')
+
+        vocab_size = len(idx2char)
+        config = Config(vocab_size, epochs)
+
+    text_as_int = np.array([char2idx[c] for c in text]) # works because text is a list of words
     train_model(checkpoint_dir, text_as_int, model, config)
     
 

@@ -18,7 +18,8 @@ def create_vocab_from_file(text, checkpoint_dir):
     char2idx = {u:i for i, u in enumerate(vocab)}
     idx2char = np.array(vocab)
 
-    pickle_rick(checkpoint_dir, char2idx, idx2char)
+    pickle_rick(checkpoint_dir, char2idx, 'char2idx')
+    pickle_rick(checkpoint_dir, idx2char, 'idx2char')
 
     return char2idx, idx2char
 

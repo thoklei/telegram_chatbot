@@ -17,6 +17,7 @@ import tensorflow as tf
 from telegram.error import NetworkError, Unauthorized
 from time import sleep
 from language_model import WordLanguageModel, CharLanguageModel
+from util import unpickle
 
 update_id = None
 lang_model = None
@@ -29,13 +30,10 @@ def main(word_level, path_to_model):
 
     model = tf.keras.models.load_model(os.path.join(path_to_model,"checkpoint_release.h5"))
 
-    pkl_file = open(os.path.join(path_to_model,'char2idx.pkl'), 'rb')
-    char2idx = pickle.load(pkl_file)
-    pkl_file.close()
+    char2idx = unpickle(path_to_model, 'char2idx')
+    idx2char = unpickle(path_to_model, 'idx2char')
 
-    pkl_file = open(os.path.join(path_to_model,'idx2char.pkl'), 'rb')
-    idx2char = pickle.load(pkl_file)
-    pkl_file.close()
+
 
     if( word_level ):
         lang_model = WordLanguageModel(model, char2idx, idx2char)        

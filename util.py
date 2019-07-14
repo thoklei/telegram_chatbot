@@ -21,15 +21,17 @@ def remove_unknowns(vocab, sentence):
     return sentence
 
 
-def pickle_rick(checkpoint_dir, char2idx, idx2char):
+def pickle_rick(checkpoint_dir, file, name):
     ### pickle-Riiiiick! ###
-    output = open(os.path.join(checkpoint_dir, 'char2idx.pkl'), 'wb')
-    pickle.dump(char2idx, output)
-    output.close()
-    output = open(os.path.join(checkpoint_dir, 'idx2char.pkl'), 'wb')
-    pickle.dump(idx2char, output)
+    output = open(os.path.join(checkpoint_dir, name+'.pkl'), 'wb')
+    pickle.dump(file, output)
     output.close()
 
+def unpickle(path, name):
+    pkl_file = open(os.path.join(path, name+'.pkl'), 'rb')
+    lazarus = pickle.load(pkl_file)
+    pkl_file.close()
+    return lazarus
 
 def split_input_target(chunk):
     """
