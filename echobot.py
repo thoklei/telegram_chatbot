@@ -42,7 +42,7 @@ def main():
     model, char2idx, idx2char = language_model()
 
     # Telegram Bot Authorization Token
-    bot = telegram.Bot(open("acces_token.txt", 'r').read())
+    bot = telegram.Bot(open("access_token.txt", 'r').read())
 
     # get the first pending update_id, this is so we can skip over it in case
     # we get an "Unauthorized" exception.

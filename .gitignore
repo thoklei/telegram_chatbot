@@ -1,3 +1,7 @@
-access_token.txt
+*.txt
+*.h5
+*.ipynb
+events.out.tfevents.*
+*.trace
 .DS_Store
 __pycache__
