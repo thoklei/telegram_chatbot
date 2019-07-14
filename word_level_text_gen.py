@@ -6,24 +6,9 @@ import os
 import re
 import time
 import argparse
-
+from util import prepare_text, remove_unknowns
 # in case you want to use the Shakespear dataset to check if it works
 #path_to_file = tf.keras.utils.get_file('shakespeare.txt', 'https://storage.googleapis.com/download.tensorflow.org/data/shakespeare.txt')
-
-def prepare_text(text):
-    text = text.replace("\n", " \n ") # making sure that we get paragraphs right
-    text = re.sub(r"([?.!,¿])", r" \1 ", text) # inserting space in between punctuation
-    splitted = text.split(" ")
-    return splitted
-
-def remove_unknowns(vocab, sentence):
-    """
-    assuming sentence is a list
-    """
-    for i in range(len(sentence)):
-        if not sentence[i] in vocab:
-            sentence[i] = "<unk>"
-    return sentence
 
 def preprocessing(text):
     """

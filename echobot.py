@@ -13,13 +13,14 @@ import tensorflow as tf
 from telegram.error import NetworkError, Unauthorized
 from time import sleep
 from char_level_text_gen import generate_text, create_vocab_from_file
+from word_level_text_gen import generate_text as word_generate_text
 
 update_id = None
 model = None
 char2idx = None
 idx2char = None
 
-def language_model():
+def char_language_model():
 
     path_to_model = "checkpoint.h5"
     filename = "chats.txt"
@@ -33,13 +34,32 @@ def language_model():
 
     return model, char2idx, idx2char
 
+def word_language_model():
+
+    path_to_model = "checkpoint.h5"
+    filename = "chats.txt"
+
+    text = open(filename, 'rb').read().decode(encoding='utf-8')
+
+    ### creating vocab, converting text to long integer sequence ###
+    char2idx, idx2char = create_vocab_from_file(text)
+
+    model = tf.keras.models.load_model(path_to_model)
+
+    return model, char2idx, idx2char
+
+
 def main():
     """Run the bot."""
     global update_id
     global model 
     global char2idx
     global idx2char
-    model, char2idx, idx2char = language_model()
+
+    if( char_level ):
+        model, char2idx, idx2char = char_language_model()
+    else:
+        model, char2idx, idx2char = word_language_model()
 
     # Telegram Bot Authorization Token
     bot = telegram.Bot(open("access_token.txt", 'r').read())
