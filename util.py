@@ -68,7 +68,7 @@ def train_model(checkpoint_dir, text_as_int, model, config):
     char_dataset = tf.data.Dataset.from_tensor_slices(text_as_int)
     sequences = char_dataset.batch(config.seq_length+1, drop_remainder=True)
     dataset = sequences.map(split_input_target)
-    dataset = dataset.shuffle(config.BUFFER_SIZE).batch(config.BATCH_SIZE, drop_remainder=True)
+    dataset = dataset.shuffle(config.buffer_size).batch(config.batch_size, drop_remainder=True)
 
     # def loss(labels, logits):
     #     return tf.keras.losses.sparse_categorical_crossentropy(labels, logits, from_logits=True)
@@ -101,29 +101,25 @@ def train_model(checkpoint_dir, text_as_int, model, config):
     ]
 
     ### training - you gotta love keras ###
-    model.fit(dataset, epochs=config.EPOCHS, callbacks=callbacks)
+    model.fit(dataset, epochs=config.epochs, callbacks=callbacks)
 
 
 class Config():
 
-    ### hyperparameters ###
-    BUFFER_SIZE = 10000
-    BATCH_SIZE = 64
-    EPOCHS = 15
-
-    embedding_dim = 128
-    rnn_units = 1024
-
-    seq_length = 30
-
     def __init__(self, vocab_size, epochs):
         self.vocab_size = vocab_size
-        self.EPOCHS = epochs
+        self.epochs = epochs
+
+        self.buffer_size = 10000
+        self.batch_size = 64
+        self.embedding_dim = 256
+        self.rnn_units = 1024
+        self.seq_length = 30
 
     def get_release_config(self):
         c = Config(self.vocab_size, self.epochs)
-        c.BUFFER_SIZE = self.BUFFER_SIZE
-        c.BATCH_SIZE = 1
+        c.buffer_size = self.buffer_size
+        c.batch_size = 1
         c.embedding_dim = self.embedding_dim
         c.rnn_units = self.rnn_units
         c.seq_length = self.seq_length

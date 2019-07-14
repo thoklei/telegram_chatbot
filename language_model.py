@@ -71,7 +71,7 @@ class CharLanguageModel(LanguageModel):
 class WordLanguageModel(LanguageModel):
 
     def __init__(self, model, char2idx, idx2char):
-        super(WordLanguageModel, self).__init__(self, model, char2idx, idx2char)
+        super(WordLanguageModel, self).__init__(model, char2idx, idx2char)
         self.delimiter = " "
 
 

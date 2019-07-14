@@ -3,5 +3,6 @@
 *.ipynb
 events.out.tfevents.*
 *.trace
+*.pkl
 .DS_Store
 __pycache__

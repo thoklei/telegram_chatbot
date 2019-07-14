@@ -6,7 +6,7 @@ from util import prepare_text, remove_unknowns, split_input_target, build_model,
 # in case you want to use the Shakespeare dataset to check if it works
 #path_to_file = tf.keras.utils.get_file('shakespeare.txt', 'https://storage.googleapis.com/download.tensorflow.org/data/shakespeare.txt')
 
-def preprocessing(text, checkpoint_dir):
+def preprocessing(text, checkpoint_dir, minocc):
     """
     This time, we cannot leave the file as it is. We have to modify it first.
     - replace "\n" by " \n " -> newline is a word
@@ -30,7 +30,7 @@ def preprocessing(text, checkpoint_dir):
             
     vocab = ["<unk>"]
     for word in list(occurences.keys()):
-        if occurences[word] > 1:
+        if occurences[word] > minocc:
             vocab.append(word)
 
     splitted = remove_unknowns(vocab, splitted) # removing words that appear less than two times
@@ -50,12 +50,12 @@ def preprocessing(text, checkpoint_dir):
     return splitted, char2idx, idx2char
 
 
-def main(training_from_scratch, filename, checkpoint_dir, checkpoint, epochs):
+def main(training_from_scratch, filename, checkpoint_dir, checkpoint, epochs, minocc):
 
     if( training_from_scratch ):
 
         text = open(filename, 'rb').read().decode(encoding='utf-8')
-        text, char2idx, idx2char = preprocessing(text, checkpoint_dir) # note that we are replacing the text here
+        text, char2idx, idx2char = preprocessing(text, checkpoint_dir, minocc) # note that we are replacing the text here
 
         vocab_size = len(idx2char)
         config = Config(vocab_size, epochs)
@@ -89,10 +89,12 @@ if __name__ == "__main__":
                     help="path to checkpoint file from which to start")
     parser.add_argument("-epochs", type=int,
                     help="how many epochs do you want to run?")
+    parser.add_argument("-minocc", type=int, default=1,
+                    help="How often a word needs to appear before it shows up in the vocab")
 
     args = parser.parse_args()
     if args.scratch == 0:
         scratch = False
     else:
         scratch = True
-    main(scratch, args.textfile, args.checkpointdir, args.checkpoint, args.epochs)
+    main(scratch, args.textfile, args.checkpointdir, args.checkpoint, args.epochs, args.minocc)
