@@ -3,6 +3,9 @@ A telegram chatbot, trained on your own chat history.
 
 So, there is this chat app that I really like called Telegram, which is basically Whatsapp with a better UI. One of its coolest features is that it allows you to program bots: Little programs that use Telegram's API to appear like other users that you can send messages to and receive answers from. The most obvious project you could use that for is a chatbot that was trained on the real messages you exchanged with friends. So let's give it a try.
 
+# Exporting your chat data
+You can do that by entering a chat, clicking on the menu and choosing "export chat history". You can also export images, voice messages and other stuff, but we only need the raw messages. Telegram will create a folder with a bunch of html files and some css, which allows for a rather pretty depiction of the messages, but we don't need that, we only want the raw text. So I wrote a script to filter the text out, using beautiful soup, which you might have to install. You can start the script from the command line, just tell it where to look and how many "messages_n.html" files there are. It will produce two outputs: One in which the author is part of the message, and one with only the messages. 
+
 # Setting up the bot
 You will need an API key (or "access token") to register your bot. You can use Telegram's Botfather to guide you through the extremely simple setup process. 
 
