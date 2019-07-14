@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+
 """
 adapted from https://github.com/python-telegram-bot/python-telegram-bot/blob/master/examples/echobot.py
 
@@ -9,57 +10,37 @@ a file with the chat data you used to train the model and of course the checkpoi
 """
 import logging
 import telegram
+import argparse
+import pickle
+import os
 import tensorflow as tf 
 from telegram.error import NetworkError, Unauthorized
 from time import sleep
-from char_level_text_gen import generate_text, create_vocab_from_file
-from word_level_text_gen import generate_text as word_generate_text
+from language_model import WordLanguageModel, CharLanguageModel
 
 update_id = None
-model = None
-char2idx = None
-idx2char = None
-
-def char_language_model():
-
-    path_to_model = "checkpoint.h5"
-    filename = "chats.txt"
-
-    text = open(filename, 'rb').read().decode(encoding='utf-8')
-
-    ### creating vocab, converting text to long integer sequence ###
-    char2idx, idx2char = create_vocab_from_file(text)
-
-    model = tf.keras.models.load_model(path_to_model)
-
-    return model, char2idx, idx2char
-
-def word_language_model():
-
-    path_to_model = "checkpoint.h5"
-    filename = "chats.txt"
-
-    text = open(filename, 'rb').read().decode(encoding='utf-8')
-
-    ### creating vocab, converting text to long integer sequence ###
-    char2idx, idx2char = create_vocab_from_file(text)
-
-    model = tf.keras.models.load_model(path_to_model)
-
-    return model, char2idx, idx2char
+lang_model = None
 
 
-def main():
+def main(word_level, path_to_model):
     """Run the bot."""
     global update_id
-    global model 
-    global char2idx
-    global idx2char
+    global lang_model
 
-    if( char_level ):
-        model, char2idx, idx2char = char_language_model()
+    model = tf.keras.models.load_model(os.path.join(path_to_model,"checkpoint_release.h5"))
+
+    pkl_file = open(os.path.join(path_to_model,'char2idx.pkl'), 'rb')
+    char2idx = pickle.load(pkl_file)
+    pkl_file.close()
+
+    pkl_file = open(os.path.join(path_to_model,'idx2char.pkl'), 'rb')
+    idx2char = pickle.load(pkl_file)
+    pkl_file.close()
+
+    if( word_level ):
+        lang_model = WordLanguageModel(model, char2idx, idx2char)        
     else:
-        model, char2idx, idx2char = word_language_model()
+        lang_model = CharLanguageModel(model, char2idx, idx2char)
 
     # Telegram Bot Authorization Token
     bot = telegram.Bot(open("access_token.txt", 'r').read())
@@ -91,11 +72,20 @@ def echo(bot):
         update_id = update.update_id + 1
 
         if update.message:  # your bot can receive updates without messages
-            global char2idx
-            global idx2char
-            res = generate_text(model, start_string=update.message.text, char2idx=char2idx, idx2char=idx2char)
+            global lang_model
+            res = lang_model.answer(update.message.text)
             update.message.reply_text(res)
 
 
 if __name__ == '__main__':
-    main()
+    parser = argparse.ArgumentParser(description='Trains a word-level LSTM, either from scratch or existing checkpoint.')
+    parser.add_argument('-word', type=int,
+                    help='1 = use word level text gen, 0 = use char level text gen')
+    parser.add_argument('-path', type=str,
+                    help="Path to model directory (should contain checkpoint file and vocabulary)")
+    args = parser.parse_args()
+    if args.word == 1:
+        word = True
+    else:
+        word = False
+    main(word, args.path)
